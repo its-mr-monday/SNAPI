@@ -32,12 +32,16 @@ def decode_packet(packet: str):
 class SNAPIResponse:
     def __init__(self, payload:dict, meta_inf: dict):
         self._payload = payload
-        self.meta_inf = meta_inf
+        self._meta_inf = meta_inf
     
     def response_code(self):
-        if self.meta_inf == None: return None
-        return self.meta_inf["response_code"]
+        if self._meta_inf == None: return None
+        return self._meta_inf["response_code"]
 
+    def meta_inf(self):
+        if self._meta_inf == None: return None
+        return self._meta_inf
+        
     def payload(self):
         if self._payload == None: return None
         return self._payload    
@@ -71,13 +75,27 @@ def write_file(fileResponse: SNAPIResponse, srcPath: str):
     return True
     
 class SNAPIClient:
-    def __init__(self, host: str, port: int, sslVerify=True):
+    def __init__(self, host: str, port: int, sslVerify=True, proxy=None, proxy_host=None, proxy_port=None):
         self.host = host
         self.port = port
         self.sslVerify=sslVerify
+        self.set_proxy(proxy, proxy_host, proxy_port)
+
+    def set_proxy(self, proxy: str, proxy_host: str, proxy_port: int):
+        self.proxy = proxy
+        self.proxy_host = proxy_host
+        self.proxy_port = proxy_port
+
+    def remove_proxy(self):
+        self.proxy = None
+        self.proxy_host = None
+        self.proxy_port = None
 
     def post(self, route: str, payload: dict, auth=""):
         meta = { "route": route, "request_type": "POST" }
+        if self.proxy != None:
+            meta["server"] = self.host
+            meta["server_port"] = self.port
         if auth != "":
             meta["auth"] = auth
         packet = encode_packet(payload, meta)
@@ -85,6 +103,9 @@ class SNAPIClient:
 
     def get(self, route: str, payload={}, auth=""):
         meta = { "route": route, "request_type": "GET" }
+        if self.proxy != None:
+            meta["server"] = self.host
+            meta["server_port"] = self.port
         if auth != "":
             meta["auth"] = auth
         packet = encode_packet(payload, meta)
@@ -92,6 +113,9 @@ class SNAPIClient:
 
     def download(self, route: str, fileName: str, dest="", auth=""):
         meta = { "route": route, "request_type": "DOWNLOAD"}
+        if self.proxy != None:
+            meta["server"] = self.host
+            meta["server_port"] = self.port
         if auth != "":
             meta["auth"] = auth
         
@@ -163,8 +187,12 @@ class SNAPIClient:
         if self.sslVerify==False:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-        
-        with socket.create_connection((self.host, self.port)) as sock:
+        hostaddr = self.host
+        hostport = self.port
+        if self.proxy != None:
+            hostaddr = self.proxy_host
+            hostport = self.proxy_port
+        with socket.create_connection((hostaddr, hostport)) as sock:
             with context.wrap_socket(sock, server_hostname=self.host) as sslSocket:
                 print(packet.decode("utf-8"))
                 sslSocket.sendall(packet)

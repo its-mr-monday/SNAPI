@@ -95,7 +95,7 @@ class SNAPIServer:
                         reqThread.start()
                         self.active_threads.append(reqThread)
         except KeyboardInterrupt:
-            print("SNAPI Server shutting down!")
+            print("\nSNAPI Server shutting down!")
             self.__suspendThreads()
 
     def request_thread(self, conn: SSLSocket, addr):
@@ -201,15 +201,15 @@ class SNAPIServer:
 
         if "filename" not in payload:
             return 400, { "message": "Bad Request" }
-        
+        print(payload)
         filename = payload["filename"]
         if filename == "":
             return 400, { "message": "Bad Request" }
-        
+        print(filename)
         srcpath = os.path.join(current_dir, filename)
-        
+
         #Prevent file system traversal
-        srcpathdir = os.path.pardir(srcpath)
+        srcpathdir = os.path.dirname(srcpath)
         if srcpathdir != current_dir:
             return 400, { "message": "Bad Request" }
         if not os.path.exists(srcpath):
