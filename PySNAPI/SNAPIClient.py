@@ -87,6 +87,12 @@ class SNAPIClient:
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
 
+    def set_proxy_auth_token(self, token: str):
+        self.proxy_auth = { "token": token }
+
+    def set_proxy_auth_username_password(self, username: str, password: str):
+        self.proxy_auth = { "username": username, "password": password }
+        
     def remove_proxy(self):
         self.proxy = None
         self.proxy_host = None

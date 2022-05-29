@@ -27,6 +27,12 @@ class SNAPIProxy:
 
     def set_auth(self, auth: callable):
         self.auth = auth
+
+    def set_proxy_auth_token(self, token:str):
+        self.proxy_auth = { "token": token }
+
+    def set_proxy_auth_username_password(self, username: str, password: str):
+        self.proxy_auth = { "username": username, "password": password }
         
     def start_proxy(self):
         try:
