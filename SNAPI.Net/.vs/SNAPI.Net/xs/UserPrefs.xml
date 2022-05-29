@@ -1,4 +1,30 @@
 ﻿<Properties>
   <MonoDevelop.Ide.ItemProperties.SNAPI.Net FirstBuild="True" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SNAPI.Net/SNAPIClient/SNAPIFileResponse.cs">
+    <Files>
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIResponse.cs" Line="10" Column="21" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIClient.cs" Line="93" Column="1" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIFileResponse.cs" Line="2" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="SNAPI.Net" expanded="True">
+            <Node name="SNAPI.Net" expanded="True">
+              <Node name="SNAPIClient" expanded="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
   <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
 </Properties>

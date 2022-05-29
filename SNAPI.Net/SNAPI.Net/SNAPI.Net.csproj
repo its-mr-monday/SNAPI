@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="SNAPIClient\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SNAPIClient\" />
+  </ItemGroup>
 </Project>
