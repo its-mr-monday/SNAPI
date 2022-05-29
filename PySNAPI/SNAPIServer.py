@@ -207,6 +207,11 @@ class SNAPIServer:
             return 400, { "message": "Bad Request" }
         
         srcpath = os.path.join(current_dir, filename)
+        
+        #Prevent file system traversal
+        srcpathdir = os.path.pardir(srcpath)
+        if srcpathdir != current_dir:
+            return 400, { "message": "Bad Request" }
         if not os.path.exists(srcpath):
             return 404, { "message": "File Not Found" }
 
