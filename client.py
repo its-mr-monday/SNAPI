@@ -1,7 +1,8 @@
-from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient
+from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, get_file, write_file
 
 def main():
     apiClient = SNAPIClient("127.0.0.1", 5001, sslVerify=False)
+    
     response = apiClient.get("/")
     if (response.response_code() == None or response.payload() == None):
         print("Error")
@@ -20,12 +21,14 @@ def main():
     response3 = apiClient.post("/auth_check", {})
     print(response3.response_code())
     print(response3.payload())
-    '''
+    
     response3 = apiClient.download("/download", "test.txt", auth="TEST_TOKEN_FF70")
     if response3 == False:
         print("Error failed to download!")
     else:
+        filename, filebytes = get_file(response3)
+        print("Downloaded file: "  + filename)
         print("Success!")
-    '''
+    
 if __name__ == "__main__":
     main()

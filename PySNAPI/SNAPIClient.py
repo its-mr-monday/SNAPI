@@ -4,7 +4,7 @@ import ssl
 import os
 import base64
 import hashlib
-import time
+
 def encode_packet(payload: dict, meta_inf: dict):
     payload_str = json.dumps(payload)
     meta_inf_str = json.dumps(meta_inf)
@@ -42,6 +42,34 @@ class SNAPIResponse:
         if self._payload == None: return None
         return self._payload    
 
+def get_file(fileResponse: SNAPIResponse):
+    if fileResponse.response_code() != 200:
+        return None
+    payload = fileResponse.payload()
+    if payload == None: return None
+    if "filename" not in payload: return None
+    if "data" not in payload: return None
+    filename = payload["filename"]
+    filebytes = base64.b64decode(payload["data"])
+    return filename, filebytes
+
+def write_file(fileResponse: SNAPIResponse, srcPath: str):
+    if fileResponse.response_code() != 200:
+        return False
+    payload = fileResponse.payload()
+    if payload == None: return False
+    if "filename" not in payload: return False
+    if "data" not in payload: return False
+    filename = payload["filename"]
+    filebytes = base64.b64decode(payload["data"])
+    filehash = payload["hash"]
+    #Verify the hash matches
+    if filehash != hashlib.sha256(filebytes).hexdigest(): return False
+    if os.path.exists(srcPath): return False
+    with open(srcPath, 'wb') as f:
+        f.write(filebytes)
+    return True
+    
 class SNAPIClient:
     def __init__(self, host: str, port: int, sslVerify=True):
         self.host = host
@@ -62,12 +90,25 @@ class SNAPIClient:
         packet = encode_packet(payload, meta)
         return self.send_packet(packet)
 
-    def download(self, route: str, fileName: str, auth="", dest=""):
+    def download(self, route: str, fileName: str, dest="", auth=""):
+        meta = { "route": route, "request_type": "DOWNLOAD"}
+        if auth != "":
+            meta["auth"] = auth
+        
+        payload = { "filename": fileName }
+        packet = encode_packet(payload, meta)
+        response = self.send_packet(packet)
+        if dest != "":
+            if write_file(response, dest) == False:
+                raise IOError("Could not write file to dest: " + dest)
+        return response
+    '''
+    def download_legacy(self, route: str, fileName: str, dest: str, auth=""):
         #Make the setup request
         meta = { "route": route, "request_type": "DOWNLOAD_SETUP" }
         if auth != "":
             meta["auth"] = auth
-        payload = { "fileName": fileName }
+        payload = { "filename": fileName }
         packet = encode_packet(payload, meta)
         response = self.send_packet(packet)
         if response.response_code() != 200:
@@ -115,7 +156,7 @@ class SNAPIClient:
         with open(dest, 'wb') as f:
             f.write(fileBytes)
         return True
-
+    '''
     #Returns a response object
     def send_packet(self, packet: bytes):
         context = ssl.create_default_context()
