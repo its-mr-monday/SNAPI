@@ -92,7 +92,7 @@ class SNAPIClient:
 
     def set_proxy_auth_username_password(self, username: str, password: str):
         self.proxy_auth = { "username": username, "password": password }
-        
+
     def remove_proxy(self):
         self.proxy = None
         self.proxy_host = None
@@ -206,7 +206,7 @@ class SNAPIClient:
             hostaddr = self.proxy_host
             hostport = self.proxy_port
         with socket.create_connection((hostaddr, hostport)) as sock:
-            with context.wrap_socket(sock, server_hostname=self.host) as sslSocket:
+            with context.wrap_socket(sock, server_hostname=hostaddr) as sslSocket:
                 print(packet.decode("utf-8"))
                 sslSocket.sendall(packet)
                 data = None
