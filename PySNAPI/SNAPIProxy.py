@@ -2,10 +2,8 @@ from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, socket, ssl, json
 from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time, datetime
 from ssl import SSLSocket
 
-
-
 class SNAPIProxy:
-    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True,auth=None, proxy_auth=None, proxy=None, proxy_host=None, proxy_port=None):
+    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True,auth=None, proxy_auth=None, proxy_host=None, proxy_port=None):
         self.host = host
         self.port = port
         self.sslVerify = sslVerify
@@ -18,10 +16,9 @@ class SNAPIProxy:
         self.cleanupThread = None
         self.auth = auth
         self.proxy_auth = proxy_auth
-        self.set_proxy(proxy, proxy_host, proxy_port)
+        self.set_proxy(proxy_host, proxy_port)
 
-    def set_proxy(self, proxy: str, proxy_host: str, proxy_port: int):
-        self.proxy = proxy
+    def set_proxy(self, proxy_host: str, proxy_port: int):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
 
@@ -33,7 +30,7 @@ class SNAPIProxy:
 
     def set_proxy_auth_username_password(self, username: str, password: str):
         self.proxy_auth = { "username": username, "password": password }
-        
+
     def start_proxy(self):
         try:
             print("Starting SNAPI (Secure Network Application Interface) Proxy on port: "+ str(self.port))
@@ -97,7 +94,7 @@ class SNAPIProxy:
             auth = ""
             if "auth" in meta_inf:
                 auth = meta_inf["auth"]
-            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy_auth=self.proxy_auth, proxy=self.proxy, proxy_host=self.proxy_host, proxy_port=self.proxy_port)
+            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy_auth=self.proxy_auth, proxy_host=self.proxy_host, proxy_port=self.proxy_port)
             request_type = meta_inf["request_type"]
             response = None
             if request_type == "GET":

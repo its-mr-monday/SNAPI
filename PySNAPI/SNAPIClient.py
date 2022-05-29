@@ -78,15 +78,14 @@ def write_file(fileResponse: SNAPIResponse, srcPath: str):
     return True
     
 class SNAPIClient:
-    def __init__(self, host: str, port: int, sslVerify=True, proxy=None, proxy_host=None, proxy_port=None, proxy_auth=None):
+    def __init__(self, host: str, port: int, sslVerify=True, proxy_host=None, proxy_port=None, proxy_auth=None):
         self.host = host
         self.port = port
         self.sslVerify=sslVerify
         self.proxy_auth = proxy_auth
-        self.set_proxy(proxy, proxy_host, proxy_port)
+        self.set_proxy(proxy_host, proxy_port)
 
-    def set_proxy(self, proxy: str, proxy_host: str, proxy_port: int):
-        self.proxy = proxy
+    def set_proxy(self, proxy_host: str, proxy_port: int):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
 
@@ -97,13 +96,12 @@ class SNAPIClient:
         self.proxy_auth = { "username": username, "password": password }
 
     def remove_proxy(self):
-        self.proxy = None
         self.proxy_host = None
         self.proxy_port = None
 
     def post(self, route: str, payload: dict, auth=""):
         meta = { "route": route, "request_type": "POST" }
-        if self.proxy != None:
+        if self.proxy_host != None and self.proxy_port != None:
             if self.proxy_auth != None:
                 meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
@@ -115,7 +113,7 @@ class SNAPIClient:
 
     def get(self, route: str, payload={}, auth=""):
         meta = { "route": route, "request_type": "GET" }
-        if self.proxy != None:
+        if self.proxy_host != None and self.proxy_port != None:
             if self.proxy_auth != None:
                 meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
@@ -127,7 +125,7 @@ class SNAPIClient:
 
     def download(self, route: str, fileName: str, dest="", auth=""):
         meta = { "route": route, "request_type": "DOWNLOAD"}
-        if self.proxy != None:
+        if self.proxy_host != None and self.proxy_port != None:
             if self.proxy_auth != None:
                 meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
@@ -151,7 +149,7 @@ class SNAPIClient:
             context.verify_mode = ssl.CERT_NONE
         hostaddr = self.host
         hostport = self.port
-        if self.proxy != None:
+        if self.proxy_host != None and self.proxy_port != None:
             hostaddr = self.proxy_host
             hostport = self.proxy_port
         with socket.create_connection((hostaddr, hostport)) as sock:
