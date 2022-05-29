@@ -224,64 +224,7 @@ class SNAPIServer:
         fhash = hashlib.sha256(filebytes).hexdigest()
         
         return 200, { "data": b64FileString, "filename": filename, "filesize": fsize, "sha256": fhash }
-
-    '''
-    def download_handler_legacy(self, request_type: str, request_data: dict, srcDir: str, authMethod):
-        current_dir = srcDir
-        print(request_type)
-        if request_type == "DOWNLOAD_SETUP":
-            pass
-        elif request_type == "DOWNLOAD_PART":
-            pass
-        else:
-            return 400, { "message": "Bad Request" }
-        payload = request_data["payload"]
-        meta_inf = request_data["meta_inf"]
-        if authMethod != None:
-            auth = meta_inf["auth"]
-            if authMethod(auth) == False:
-                return 401, { "message": "Unauthorized" }
-        if "filename" not in payload:
-            print("No filename in payload")
-            return 400, { "message": "Bad Request" }
-
-        srcfile = os.path.join(current_dir, payload["filename"])
-        if not os.path.isfile(srcfile):
-            return 404, { "message": "File not found" }
         
-        filebytes = bytearray()
-        with open(srcfile, 'rb') as f:
-            filebytes = f.read()
-        b64FileString = base64.b64encode(filebytes).decode("utf-8")
-        buffer = 4096
-        parts = int(len(b64FileString)/buffer)
-        fsize = len(b64FileString)
-        if len(b64FileString) % buffer != 0:
-            parts += 1
-
-        if request_type == "DOWNLOAD_SETUP":
-            #Setup the file for upload
-            
-            sha = hashlib.sha256(filebytes).hexdigest()
-            return 200, { "message": "File has been moved to queue!","filesize": fsize, "parts": parts, "sha": sha, "buffer": buffer, "status": "proceed" }
-
-        elif request_type == "DOWNLOAD_PART":
-            #Get the file part
-            if "part" not in payload:
-                return 400, { "message": "Bad Request" }
-            if payload["part"] < 1 or payload["part"] > parts:
-                return 400, { "message": "Bad Request" }
-            part = payload["part"]
-            if part == parts:
-                part_data = b64FileString[(part-1)*buffer:]
-                return 200, { "size": len(part_data), "part": part, "encoding": "base64", "status": "finished", "data": part_data }
-            else:
-                part_data = b64FileString[(part-1)*buffer:part*buffer]
-                return 200, {"status": "proceed", "size": len(part_data), "part": part, "encoding": "base64", "data": part_data }
-
-        else:
-            return 400, { "message": "Bad Request" }
-        '''
     def log_request(self, route, response_code, ipaddr, time, req_type):
         print(f"[{time}] {ipaddr[0]} {response_code} {req_type} {route}")
 

@@ -142,61 +142,7 @@ class SNAPIClient:
             if write_file(response, dest) == False:
                 raise IOError("Could not write file to dest: " + dest)
         return response
-    '''
-    def download_legacy(self, route: str, fileName: str, dest: str, auth=""):
-        #Make the setup request
-        meta = { "route": route, "request_type": "DOWNLOAD_SETUP" }
-        if auth != "":
-            meta["auth"] = auth
-        payload = { "filename": fileName }
-        packet = encode_packet(payload, meta)
-        response = self.send_packet(packet)
-        if response.response_code() != 200:
-            return False
-        #Get the file size
-        fileSize = response.payload()["filesize"]
-        parts = response.payload()["parts"]
-        sha = response.payload()["sha"]
-        buffer = response.payload()["buffer"]
-        status = response.payload()["status"]
-        current_part = 1
-        b64FileString = ""
-        while status == "proceed":
-            #keep fetching the parts
-            meta = { "route": route, "request_type": "DOWNLOAD_PART" }
-            if auth != "":
-                meta["auth"] = auth
-            
-            payload = { "filename": fileName, "part": current_part}
-            packet = encode_packet(payload, meta)
-            response = self.send_packet(packet)
-            if response.response_code() != 200:
-                return False
-            b64FileString += response.payload()["data"]
-            status = response.payload()["status"]
 
-        if b64FileString == "":
-            return False
-
-        if os.path.isfile(dest):
-            return False
-
-        if os.path.isdir(dest):
-            return False
-
-        fileBytes = base64.b64decode(b64FileString)
-        #Verify these bytes
-        h = hashlib.new('sha256')
-        h.update(fileBytes)
-        hash = h.hexdigest()
-
-        if hash != sha:
-            return False
-        
-        with open(dest, 'wb') as f:
-            f.write(fileBytes)
-        return True
-    '''
     #Returns a response object
     def send_packet(self, packet: bytes):
         context = ssl.create_default_context()
