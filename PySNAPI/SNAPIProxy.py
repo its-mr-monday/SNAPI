@@ -1,9 +1,11 @@
 from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, socket, ssl, json
-from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time
+from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time, datetime
 from ssl import SSLSocket
 
+
+
 class SNAPIProxy:
-    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True, proxy=None, proxy_host=None, proxy_port=None):
+    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True,auth=None, proxy_auth=None, proxy=None, proxy_host=None, proxy_port=None):
         self.host = host
         self.port = port
         self.sslVerify = sslVerify
@@ -14,6 +16,8 @@ class SNAPIProxy:
         self.sslContext.load_cert_chain(pem_file, private_key)
         self.socket = None
         self.cleanupThread = None
+        self.auth = auth
+        self.proxy_auth = proxy_auth
         self.set_proxy(proxy, proxy_host, proxy_port)
 
     def set_proxy(self, proxy: str, proxy_host: str, proxy_port: int):
@@ -21,6 +25,9 @@ class SNAPIProxy:
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
 
+    def set_auth(self, auth: callable):
+        self.auth = auth
+        
     def start_proxy(self):
         try:
             print("Starting SNAPI (Secure Network Application Interface) Proxy on port: "+ str(self.port))
@@ -36,9 +43,8 @@ class SNAPIProxy:
                 while self.running:
                     clientSocket, clientAddress = sslSocket.accept()
                     if (len(self.active_threads) >= self.max_threads):
-                        meta_inf = {"response_code": 503 }
                         payload = {"message": "Proxy is busy"}
-                        clientSocket.sendall(encode_packet(meta_inf, payload))
+                        clientSocket.sendall(encode_packet(payload, 503))
                         clientSocket.close()
                     else:
                         request_thread = threading.Thread(target=self.process_client, args=(clientSocket, clientAddress), daemon=True)
@@ -68,13 +74,24 @@ class SNAPIProxy:
         if data != None:
             packet = data.decode("utf-8")
             meta_inf, payload = decode_packet(packet)
+
+            #Proxy AUTH check
+            if self.auth != None:
+                proxy_auth = meta_inf["proxy_auth"]
+                result = self.auth(proxy_auth)
+                if result == False:
+                    meta_inf = 401
+                    payload = {"message": "Authentication failed"}
+                    clientSocket.sendall(encode_packet(payload, meta_inf))
+                    clientSocket.close()
+                    return
             #get server host and port
             server_host = meta_inf["server"]
             server_port = meta_inf["server_port"]
             auth = ""
             if "auth" in meta_inf:
                 auth = meta_inf["auth"]
-            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy=self.proxy, proxy_host=self.proxy_host, proxy_port=self.proxy_port)
+            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy_auth=self.proxy_auth, proxy=self.proxy, proxy_host=self.proxy_host, proxy_port=self.proxy_port)
             request_type = meta_inf["request_type"]
             response = None
             if request_type == "GET":
@@ -97,9 +114,17 @@ class SNAPIProxy:
                 response_code = 400
                 response_payload = {"message": "Bad Request"}
 
-            print(encode_packet(response_payload, response_code).decode("utf-8"))
             clientSocket.sendall(encode_packet(response_payload, response_code))
             clientSocket.close()
+            self.log_request(meta_inf["route"], response_code, clientAddress, request_type, server_host)
+
+    def log_request(self, route, response_code, ipaddr, req_type, server):
+        time = datetime.datetime.now()
+        log_str = f"[{time}] {ipaddr[0]} -> {server} {response_code} {req_type} {route}"
+        print(log_str)
+
+    def log_error(self, errorMessage):
+        print(f"[{datetime.datetime.now()}] {errorMessage}")
 
     def cleanupThreads(self):
         while self.running == True:

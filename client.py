@@ -1,7 +1,7 @@
 from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, get_file, write_file
 
 def main():
-    apiClient = SNAPIClient("127.0.0.1", 5001, sslVerify=False, proxy="", proxy_host="127.0.0.1", proxy_port=5002)
+    apiClient = SNAPIClient("127.0.0.1", 5001, sslVerify=False, proxy_auth={"username": "test", "password":"test"}, proxy="", proxy_host="127.0.0.1", proxy_port=5002)
     
     response = apiClient.get("/")
     if (response.response_code() == None or response.payload() == None):

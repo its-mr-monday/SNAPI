@@ -75,10 +75,11 @@ def write_file(fileResponse: SNAPIResponse, srcPath: str):
     return True
     
 class SNAPIClient:
-    def __init__(self, host: str, port: int, sslVerify=True, proxy=None, proxy_host=None, proxy_port=None):
+    def __init__(self, host: str, port: int, sslVerify=True, proxy=None, proxy_host=None, proxy_port=None, proxy_auth=None):
         self.host = host
         self.port = port
         self.sslVerify=sslVerify
+        self.proxy_auth = proxy_auth
         self.set_proxy(proxy, proxy_host, proxy_port)
 
     def set_proxy(self, proxy: str, proxy_host: str, proxy_port: int):
@@ -94,6 +95,8 @@ class SNAPIClient:
     def post(self, route: str, payload: dict, auth=""):
         meta = { "route": route, "request_type": "POST" }
         if self.proxy != None:
+            if self.proxy_auth != None:
+                meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":
@@ -104,6 +107,8 @@ class SNAPIClient:
     def get(self, route: str, payload={}, auth=""):
         meta = { "route": route, "request_type": "GET" }
         if self.proxy != None:
+            if self.proxy_auth != None:
+                meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":
@@ -114,6 +119,8 @@ class SNAPIClient:
     def download(self, route: str, fileName: str, dest="", auth=""):
         meta = { "route": route, "request_type": "DOWNLOAD"}
         if self.proxy != None:
+            if self.proxy_auth != None:
+                meta["proxy_auth"] = self.proxy_auth
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":

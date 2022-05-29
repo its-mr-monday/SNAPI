@@ -86,9 +86,8 @@ class SNAPIServer:
                     #Handle the connection
                     conn, addr = sslSocket.accept()
                     if (len(self.active_threads) >= self.max_threads):
-                        meta_inf = { "response_code": "503" }
                         payload = { "message": "Server is busy" }
-                        conn.sendall(encode_packet(payload, meta_inf))
+                        conn.sendall(encode_packet(payload, 503))
                         conn.close()
                     else:
                         reqThread = threading.Thread(target=self.request_thread, args=(conn, addr), daemon=True)
@@ -201,11 +200,9 @@ class SNAPIServer:
 
         if "filename" not in payload:
             return 400, { "message": "Bad Request" }
-        print(payload)
         filename = payload["filename"]
         if filename == "":
             return 400, { "message": "Bad Request" }
-        print(filename)
         srcpath = os.path.join(current_dir, filename)
 
         #Prevent file system traversal
