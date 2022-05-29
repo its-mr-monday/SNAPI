@@ -3,6 +3,15 @@ Sample POST packet for the SNAPI Secure Network Application Interface
 The Packet would be Encrypted with a Rsa Public key
 Posting to route /api/v1/sst/verify
 
+A upload request is a post request with the following payload:
+{
+    "filename": "example.txt",
+    "encoding": "base64",
+    "size": 16,
+    "data": "Zm9vIGJhciBiYXoK",
+    "sha256": "f6f24a11d7cbbbc6d9440aca2eba0f6498755ca90adea14c5e233bf4c04bd928"
+}
+
 <snapi_req>
     <meta>
     {

@@ -55,6 +55,9 @@ def get_file(fileResponse: SNAPIResponse):
     if "data" not in payload: return None
     filename = payload["filename"]
     filebytes = base64.b64decode(payload["data"])
+    filehash = payload["sha256"]
+    #Verify the hash matches
+    if filehash != hashlib.sha256(filebytes).hexdigest(): return None
     return filename, filebytes
 
 def write_file(fileResponse: SNAPIResponse, srcPath: str):
@@ -66,7 +69,7 @@ def write_file(fileResponse: SNAPIResponse, srcPath: str):
     if "data" not in payload: return False
     filename = payload["filename"]
     filebytes = base64.b64decode(payload["data"])
-    filehash = payload["hash"]
+    filehash = payload["sha256"]
     #Verify the hash matches
     if filehash != hashlib.sha256(filebytes).hexdigest(): return False
     if os.path.exists(srcPath): return False
