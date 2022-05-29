@@ -1,0 +1,194 @@
+
+Sample POST packet for the SNAPI Secure Network Application Interface
+The Packet would be Encrypted with a Rsa Public key
+Posting to route /api/v1/sst/verify
+
+<snapi_req>
+    <meta>
+    {
+        "auth": "TEST_TOKEN_FF70"
+        "route": "/api/v1/sst/verify"
+        "request_type": "POST"
+    }
+    </meta>
+    <payload>
+    {
+        "username": "root"
+    }
+    </payload>
+</snapi_req>
+
+Response:
+<snapi_res>
+    <meta>
+    {
+        "response_code": 200
+    }
+    </meta>
+    <payload>
+    {
+        "message": "token verification successful!"
+    }
+    </payload>
+</snapi_res>
+
+Sample GET packet for the SST Secure Socket Transport Protocol
+It has a empty packet body as no data is being sent
+<snapi_req>
+    <meta>
+    {
+        "auth": "TEST_TOKEN_FF70",
+        "route": "/api/v1/sst/get_users"
+        "request_type": "GET"
+    }
+    </meta>
+    <payload>
+    {
+
+    }
+    </payload>
+</snapi_req>
+
+Response:
+<snapi_res>
+    <meta>
+    {
+        "response_code": 200
+    }
+    </meta>
+    <payload>
+    {
+        "total_users": 1,
+        "user_list": [
+            {
+                "username": "root"
+            }
+        ]
+    }
+    </payload>
+</snapi_res>
+
+//SST UPLOAD Request And Response
+Upload Setup request:
+<snapi_req>
+    <meta>
+    {
+        "auth": "TEST_TOKEN_FF70",
+        "route": "/api/v1/sst/upload_file",
+        "request_type": "UPLOAD_SETUP"
+    }
+    </meta>
+    <payload>
+        {
+            "filename": "smile.jpg",
+            "filesize": 80960,
+        }
+    </payload>
+</snapi_req>
+
+//SST Download Requests and Responses
+Download Setup Request:
+<snapi_req>
+    <meta>
+    {
+        "auth": "TEST_TOKEN_FF70",
+        "route": "/api/v1/sst/download",
+        "request_type": "DOWNLOAD_SETUP"
+    }
+    </meta>
+    <payload>
+    {
+        "filename": "smile.jpg"
+    }
+    </payload>
+</snapi_req>
+
+Download Setup Response Success
+<snapi_res>
+    <meta>
+    {
+        "response_code": 200
+    }
+    </meta>
+    <payload>
+    {
+        "message": "File has been moved to queue!",
+        "parts": 10,
+        "buffer": 8096,
+        "filesize": 80960,
+        "sha": "qn9vn893n78b2yvyb2v872b872b28b287n287bn287hn22b87vb12809ovb1278vb82",
+        "status": "proceed"
+    }
+    </payload>
+</snapi_res>
+
+Download Setup response failure
+<snapi_res>
+    <meta>
+    {
+        "reponse_code": 400/401
+    }
+    </meta>
+    <payload>
+    {
+        "message": "File could not be moved to queue, (you do not have access to this file/the file does not exist on the host system)",
+        "status": "denied"
+    }
+    </payload>
+</snapi_res>
+
+Actual Download Request for a given part:
+<snapi_req>
+    <meta>
+    {
+        "auth": "TEST_TOKEN_FF70",
+        "route": "/api/v1/sst/download",
+        "request_type": "DOWNLOAD_PART"
+    }
+    </meta>
+    <payload>
+    {
+        "filename": "smile.jpg",
+        "part": 1
+    }
+    </payload>
+</snapi_req>
+
+Response if action is approved
+<snapi_res>
+    <meta>
+    {
+        "response_code": 200
+    }
+    </meta>
+    <payload>
+    {
+        "status": "proceed/finished",
+        "size": 8096,
+        "encoding": "base64",
+        "part": 1,
+        "data": "<8096 of the chars from the base64 encoded file>"
+    }
+    </payload>
+</snapi_res>
+
+Response if action is denied
+<snapi_res>
+    <meta>
+    {
+        "response_code": 400/401,
+    }
+    </meta>
+    <payload>
+    {
+        "message": "File was not moved to queue, (you do not have access to this file/the file does not exist on the host system)",
+        "status": "denied"
+    }
+    </payload>
+</snapi_res>
+
+Response if action is dnied
+SNAPI Support will be coming soon to Python3, C# and Java
+snapi.py  - Python3 Implementation
+snapi.dll - C# Implementation
+snapi.jar - Java Implementation
