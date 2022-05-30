@@ -72,11 +72,17 @@ public class SNAPIClient
         return this.SendPacket(packet);
     }
 
-    public SNAPIFileResponse? Download(string route, string filename, string auth="") {
+    public SNAPIFileResponse? Download(string route, string filename, string auth="", string srcDir="") {
         string meta = EncodeMetaHeader(route, "DOWNLOAD", auth);
         string json = "{\"filename\":\"" + filename + "\"}";
         byte[] packet = EncodePacket(json, meta);
-        return this.SendDownloadPacket(packet);
+        SNAPIFileResponse? response =  this.SendDownloadPacket(packet);
+        if (srcDir != "" && response != null)
+        {
+            bool wroteFile = WriteFile(response, Path.Combine(srcDir, filename));
+            if (wroteFile != true) Console.WriteLine("Failed to write to file: " + Path.Combine(srcDir, filename));
+        }
+        return response;
     }
 
     public void RemoveProxy()
@@ -125,14 +131,17 @@ public class SNAPIClient
         } else {
             clientStream = new SslStream(client.GetStream(), false, null, null);
         }
+        clientStream.AuthenticateAsClient(this.host);
         return clientStream;
     }
 
     private SNAPIResponse? SendPacket(byte[] packet)
     {
         try {
-            using (TcpClient client = setupTcpClient()) {
+            using (TcpClient client = setupTcpClient())
+            {
                 SslStream clientStream = setupSslStream(client);
+                
                 clientStream.Write(packet);
                 clientStream.Flush();
                 List<byte> response = new List<byte>();
@@ -158,6 +167,7 @@ public class SNAPIClient
 
     private SNAPIFileResponse? SendDownloadPacket(byte[] packet) {
         try {
+
             using (TcpClient client = setupTcpClient()) {
                 SslStream clientStream = setupSslStream(client);
                 clientStream.Write(packet);
@@ -179,7 +189,7 @@ public class SNAPIClient
                 return fileResponse;
             }
         } catch (Exception e) {
-            Console.WriteLine(e.ToString());
+            Console.WriteLine(e);
             return null;
         }
     }

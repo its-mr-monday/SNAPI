@@ -1,7 +1,7 @@
 import threading
 import socket
 import ssl
-from ssl import SSLSocket
+from ssl import SSLEOFError, SSLSocket
 import json
 import datetime
 import time
@@ -65,6 +65,7 @@ class SNAPIServer:
         self.max_threads = max_threads
         self.sslContext = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.sslContext.load_cert_chain(pem_file, private_key)
+        self.sslContext.verify_mode = ssl.CERT_OPTIONAL
         self.socket = None
         self.running=False
         self.cleanupThread = None
@@ -84,15 +85,18 @@ class SNAPIServer:
             with self.sslContext.wrap_socket(self.socket, server_side=True) as sslSocket:
                 while self.running:
                     #Handle the connection
-                    conn, addr = sslSocket.accept()
-                    if (len(self.active_threads) >= self.max_threads):
-                        payload = { "message": "Server is busy" }
-                        conn.sendall(encode_packet(payload, 503))
-                        conn.close()
-                    else:
-                        reqThread = threading.Thread(target=self.request_thread, args=(conn, addr), daemon=True)
-                        reqThread.start()
-                        self.active_threads.append(reqThread)
+                    try:
+                        conn, addr = sslSocket.accept()
+                        if (len(self.active_threads) >= self.max_threads):
+                            payload = { "message": "Server is busy" }
+                            conn.sendall(encode_packet(payload, 503))
+                            conn.close()
+                        else:
+                            reqThread = threading.Thread(target=self.request_thread, args=(conn, addr), daemon=True)
+                            reqThread.start()
+                            self.active_threads.append(reqThread)
+                    except SSLEOFError as e:
+                        print("SSL EOF Error: " + str(e))
         except KeyboardInterrupt:
             print("\nSNAPI Server shutting down!")
             self.__suspendThreads()

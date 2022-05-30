@@ -1,6 +1,6 @@
 from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, SNAPIProxyConfig, socket, ssl, json
 from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time, datetime
-from ssl import SSLSocket
+from ssl import SSLEOFError, SSLSocket
 
 class SNAPIProxy:
     def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True, auth=None, proxy_config=None):
@@ -19,6 +19,7 @@ class SNAPIProxy:
         self.active_threads = []
         self.sslContext = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.sslContext.load_cert_chain(pem_file, private_key)
+        self.sslContext.verify_mode = ssl.CERT_OPTIONAL
         self.socket = None
         self.cleanupThread = None
         self.auth = auth
@@ -49,16 +50,21 @@ class SNAPIProxy:
             self.socket.listen(self.max_threads)
             with self.sslContext.wrap_socket(self.socket, server_side=True) as sslSocket:
                 while self.running:
-                    clientSocket, clientAddress = sslSocket.accept()
-                    if (len(self.active_threads) >= self.max_threads):
-                        payload = {"message": "Proxy is busy"}
-                        clientSocket.sendall(encode_packet(payload, 503))
-                        clientSocket.close()
-                    else:
-                        request_thread = threading.Thread(target=self.process_client, args=(clientSocket, clientAddress), daemon=True)
-                        request_thread.start()
-                        self.active_threads.append(request_thread)
-        except KeyboardInterrupt:
+                    try:
+                        clientSocket, clientAddress = sslSocket.accept()
+                        if (len(self.active_threads) >= self.max_threads):
+                            payload = {"message": "Proxy is busy"}
+                            clientSocket.sendall(encode_packet(payload, 503))
+                            clientSocket.close()
+                        else:
+                            request_thread = threading.Thread(target=self.process_client, args=(clientSocket, clientAddress), daemon=True)
+                            request_thread.start()
+                            self.active_threads.append(request_thread)
+                    except SSLEOFError as e:
+                        print("SSL EOF Error " + str(e))
+        except KeyboardInterrupt or SSLEOFError as e:
+            
+            print(e)
             print("\nSNAPI Proxy shutting down!")
             self.__suspendThreads()
         return

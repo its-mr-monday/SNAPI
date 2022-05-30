@@ -51,8 +51,14 @@ namespace SNAPI.Net.Server
 				this.tcpListener.Start();
 				while (true)
 				{
-					TcpClient newClient = this.tcpListener.AcceptTcpClient();
-					ProcessClient(newClient);
+					try
+					{
+						TcpClient newClient = this.tcpListener.AcceptTcpClient();
+						ProcessClient(newClient);
+					} catch (Exception e)
+                    {
+						Console.WriteLine(e);
+                    }
 				}
 			} catch (Exception e)
             {
