@@ -29,6 +29,21 @@ def decode_packet(packet: str):
         payload = json.loads(payload_str)
     return meta_inf, payload
 
+class SNAPIProxyConfig:
+    def __init__(self, host: str, port: int, proxy_token=None, proxy_username_and_password=None):
+        self._host = host
+        self._port = port
+        self._auth = None
+
+        if proxy_token != None:
+            self._auth = {"token": proxy_token}
+        elif proxy_username_and_password != None:
+            self._auth = proxy_username_and_password
+
+    def host(self): return self._host
+    def port(self): return self._port
+    def auth(self): return self._auth
+
 class SNAPIResponse:
     def __init__(self, payload:dict, meta_inf: dict):
         self._payload = payload
@@ -78,32 +93,23 @@ def write_file(fileResponse: SNAPIResponse, srcPath: str):
     return True
     
 class SNAPIClient:
-    def __init__(self, host: str, port: int, sslVerify=True, proxy_host=None, proxy_port=None, proxy_auth=None):
+    def __init__(self, host: str, port: int, sslVerify=True, proxy_config=None):
+        self.proxy_config = proxy_config
         self.host = host
         self.port = port
         self.sslVerify=sslVerify
-        self.proxy_auth = proxy_auth
-        self.set_proxy(proxy_host, proxy_port)
 
-    def set_proxy(self, proxy_host: str, proxy_port: int):
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
-
-    def set_proxy_auth_token(self, token: str):
-        self.proxy_auth = { "token": token }
-
-    def set_proxy_auth_username_password(self, username: str, password: str):
-        self.proxy_auth = { "username": username, "password": password }
+    def set_proxy_config(self, proxy_config: SNAPIProxyConfig):
+        self.proxy_config = proxy_config
 
     def remove_proxy(self):
-        self.proxy_host = None
-        self.proxy_port = None
+        self.proxy_config = None
 
     def post(self, route: str, payload: dict, auth=""):
         meta = { "route": route, "request_type": "POST" }
-        if self.proxy_host != None and self.proxy_port != None:
-            if self.proxy_auth != None:
-                meta["proxy_auth"] = self.proxy_auth
+        if self.proxy_config != None:
+            if self.proxy_config.auth() != None:
+                meta["proxy_auth"] = self.proxy_config.auth()
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":
@@ -113,9 +119,9 @@ class SNAPIClient:
 
     def get(self, route: str, payload={}, auth=""):
         meta = { "route": route, "request_type": "GET" }
-        if self.proxy_host != None and self.proxy_port != None:
-            if self.proxy_auth != None:
-                meta["proxy_auth"] = self.proxy_auth
+        if self.proxy_config != None:
+            if self.proxy_config.auth() != None:
+                meta["proxy_auth"] = self.proxy_config.auth()
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":
@@ -125,9 +131,9 @@ class SNAPIClient:
 
     def download(self, route: str, fileName: str, dest="", auth=""):
         meta = { "route": route, "request_type": "DOWNLOAD"}
-        if self.proxy_host != None and self.proxy_port != None:
-            if self.proxy_auth != None:
-                meta["proxy_auth"] = self.proxy_auth
+        if self.proxy_config != None:
+            if self.proxy_config.auth() != None:
+                meta["proxy_auth"] = self.proxy_config.auth()
             meta["server"] = self.host
             meta["server_port"] = self.port
         if auth != "":
@@ -149,9 +155,9 @@ class SNAPIClient:
             context.verify_mode = ssl.CERT_NONE
         hostaddr = self.host
         hostport = self.port
-        if self.proxy_host != None and self.proxy_port != None:
-            hostaddr = self.proxy_host
-            hostport = self.proxy_port
+        if self.proxy_config != None:
+            hostaddr = self.proxy_config.host()
+            hostport = self.proxy_config.port()
         with socket.create_connection((hostaddr, hostport)) as sock:
             with context.wrap_socket(sock, server_hostname=hostaddr) as sslSocket:
                 print(packet.decode("utf-8"))

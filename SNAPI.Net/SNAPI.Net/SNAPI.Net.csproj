@@ -8,12 +8,15 @@
 
   <ItemGroup>
     <None Remove="SNAPIClient\" />
-    <None Remove="SNAPIServer\" />
     <None Remove="SNAPIProxy\" />
+    <None Remove="SmapleServer\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="SNAPIClient\" />
-    <Folder Include="SNAPIServer\" />
     <Folder Include="SNAPIProxy\" />
+    <Folder Include="SmapleServer\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig" />
   </ItemGroup>
 </Project>

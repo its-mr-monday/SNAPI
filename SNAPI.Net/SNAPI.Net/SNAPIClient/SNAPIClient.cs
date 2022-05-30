@@ -5,6 +5,7 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace SNAPI.Net.SNAPIClient;
 
@@ -13,35 +14,29 @@ public class SNAPIClient
     private string host;
     private int port;
     private bool sslVerify;
-    private string? proxy_host;
-    private int? proxy_port;
-    private string? proxy_auth;
+    private string? proxy_host = null;
+    private int? proxy_port = null;
+    private string? proxy_auth = null;
+    private SNAPIProxyConfig? proxy_config;
 
-    public SNAPIClient(string host, int port, bool sslVerify = true,
-        string? proxy_host = null, int? proxy_port = null, string? proxy_auth = null)
+    public SNAPIClient(string host, int port, bool sslVerify = true, SNAPIProxyConfig? proxy_config = null)
     {
+        this.proxy_config = proxy_config;
         this.host = host;
         this.port = port;
         this.sslVerify = sslVerify;
-        this.proxy_host = proxy_host;
-        this.proxy_port = proxy_port;
-        this.proxy_auth = proxy_auth;
+        if (this.proxy_config != null)
+        {
+            this.SetProxy(this.proxy_config);
+        }
     }
 
-    public void SetProxy(string proxy_host, int proxy_port)
+    public void SetProxy(SNAPIProxyConfig proxy_config)
     {
-        this.proxy_host = proxy_host;
-        this.proxy_port = proxy_port;
-    }
-
-    public void SetProxyAuthToken(string token)
-    {
-        this.proxy_auth = "{\"token\":\""+token+"\"}";
-    }
-
-    public void SetProxyAuthCreds(string username, string password)
-    {
-        this.proxy_auth = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        this.proxy_config = proxy_config;
+        this.proxy_host = proxy_config.GetHost();
+        this.proxy_port = proxy_config.GetPort();
+        this.proxy_auth = proxy_config.GetAuth();
     }
 
     private string EncodeMetaHeader(string route, string request_type, string auth) {
@@ -83,8 +78,10 @@ public class SNAPIClient
         byte[] packet = EncodePacket(json, meta);
         return this.SendDownloadPacket(packet);
     }
+
     public void RemoveProxy()
     {
+        this.proxy_config = null;
         this.proxy_auth = null;
         this.proxy_host = null;
         this.proxy_port = null;
@@ -93,7 +90,7 @@ public class SNAPIClient
     private static byte[] EncodePacket(string payload_json, string meta_inf_json)
     {
         string packet = $"<snapi_req><meta>{meta_inf_json}</meta><payload>{payload_json}</payload></snapi_req>";
-        return Encoding.ASCII.GetBytes(packet);
+        return Encoding.UTF8.GetBytes(packet);
     }
 
     private static SNAPIResponse DecodePacket(string packet)
@@ -130,6 +127,7 @@ public class SNAPIClient
         }
         return clientStream;
     }
+
     private SNAPIResponse? SendPacket(byte[] packet)
     {
         try {
@@ -149,7 +147,7 @@ public class SNAPIClient
                 clientStream.Close();
                 client.Close();
                 byte[] response_bytes = response.ToArray();
-                string response_str = Encoding.ASCII.GetString(response_bytes);
+                string response_str = Encoding.UTF8.GetString(response_bytes);
                 return DecodePacket(response_str);
             }
         } catch (Exception e) {
@@ -176,7 +174,7 @@ public class SNAPIClient
                 clientStream.Close();
                 client.Close();
                 byte[] response_bytes = response.ToArray();
-                string response_str = Encoding.ASCII.GetString(response_bytes);
+                string response_str = Encoding.UTF8.GetString(response_bytes);
                 SNAPIFileResponse? fileResponse = JsonSerializer.Deserialize<SNAPIFileResponse>(response_str);
                 return fileResponse;
             }
@@ -196,5 +194,45 @@ public class SNAPIClient
         return true;
     }
 
-}
+    public static bool WriteFile(SNAPIFileResponse fileResponse, string srcPath)
+    {
+        if (fileResponse.Filename == "") return false;
+        if (fileResponse.Data == "") return false;
+        byte[] fileBytes = Convert.FromBase64String(fileResponse.Data);
 
+        string hash = ComputeSha256Hash(fileBytes);
+        if (hash != fileResponse.Sha256) return false;
+
+        if (File.Exists(srcPath) || Directory.Exists(srcPath)) return false;
+
+        File.WriteAllBytes(srcPath, fileBytes);
+        return true;
+    }
+
+    public static byte[]? GetFileBytes(SNAPIFileResponse fileResponse)
+    {
+        if (fileResponse.Filename == "") return null;
+        if (fileResponse.Data == "") return null;
+        byte[] fileBytes = Convert.FromBase64String(fileResponse.Data);
+        string hash = ComputeSha256Hash(fileBytes);
+
+        if (hash != fileResponse.Sha256) return null;
+
+        return fileBytes;
+    }
+
+    private static string ComputeSha256Hash(byte[] data)
+    {
+        using (SHA256 sha = SHA256.Create())
+        {
+            byte[] hashed = sha.ComputeHash(data);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hashed.Length; i++)
+            {
+                sb.Append(hashed[i].ToString("x2"));
+            }
+            return sb.ToString();
+        }
+    }
+}

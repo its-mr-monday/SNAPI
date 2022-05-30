@@ -12,8 +12,7 @@ def auth(proxy_auth: dict):
 
 def main():
     proxy = SNAPIProxy("/Users/zack/Projects/SecureSocket/PySecureSocket/certs/server.crt", 
-        "/Users/zack/Projects/SecureSocket/PySecureSocket/certs/server.key", sslVerify=False)
-    proxy.set_auth(auth)
+        "/Users/zack/Projects/SecureSocket/PySecureSocket/certs/server.key", auth=auth, sslVerify=False)
     proxy.start_proxy()
 
 if __name__ == "__main__":

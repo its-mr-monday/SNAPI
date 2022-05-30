@@ -1,8 +1,9 @@
-from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, get_file, write_file
+from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, SNAPIProxyConfig, get_file, write_file
 
 def main():
-    apiClient = SNAPIClient("127.0.0.1", 5001, sslVerify=False, proxy_auth={"username": "test", "password":"test"}, proxy_host="127.0.0.1", proxy_port=5002)
-    apiClient.set_proxy_auth_token("PROXY_TEST_TOKEN")
+    proxyConf = SNAPIProxyConfig("127.0.0.1", 5002, proxy_username_and_password={"username": "test", "password": "test"})
+    apiClient = SNAPIClient("127.0.0.1", 5001, sslVerify=False, proxy_config=proxyConf)
+    #apiClient.set_proxy_auth_token("PROXY_TEST_TOKEN")
     response = apiClient.get("/")
     if (response.response_code() == None or response.payload() == None):
         print("Error")

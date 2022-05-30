@@ -1,9 +1,16 @@
-from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, socket, ssl, json
+from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, SNAPIProxyConfig, socket, ssl, json
 from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time, datetime
 from ssl import SSLSocket
 
 class SNAPIProxy:
-    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True,auth=None, proxy_auth=None, proxy_host=None, proxy_port=None):
+    def __init__(self, pem_file: str, private_key: str, host="0.0.0.0", port=5002, max_threads=50, sslVerify=True, auth=None, proxy_config=None):
+        self.proxy_config = proxy_config
+        if proxy_config != None:
+            self.proxy_config = proxy_config
+            self.set_proxy(proxy_config.host(), proxy_config.port())
+            if proxy_config.auth() != None:
+                self.proxy_auth = proxy_config.auth()
+        
         self.host = host
         self.port = port
         self.sslVerify = sslVerify
@@ -15,8 +22,6 @@ class SNAPIProxy:
         self.socket = None
         self.cleanupThread = None
         self.auth = auth
-        self.proxy_auth = proxy_auth
-        self.set_proxy(proxy_host, proxy_port)
 
     def set_proxy(self, proxy_host: str, proxy_port: int):
         self.proxy_host = proxy_host
@@ -94,7 +99,7 @@ class SNAPIProxy:
             auth = ""
             if "auth" in meta_inf:
                 auth = meta_inf["auth"]
-            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy_auth=self.proxy_auth, proxy_host=self.proxy_host, proxy_port=self.proxy_port)
+            client = SNAPIClient(server_host, server_port, sslVerify=self.sslVerify, proxy_config=self.proxy_config)
             request_type = meta_inf["request_type"]
             response = None
             if request_type == "GET":

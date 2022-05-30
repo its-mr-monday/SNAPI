@@ -1,14 +1,13 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.ItemProperties.SNAPI.Net FirstBuild="True" />
-  <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
-  </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workbench ActiveDocument="SNAPI.Net/SNAPIClient/SNAPIFileResponse.cs">
     <Files>
-      <File FileName="SNAPI.Net/SNAPIClient/SNAPIResponse.cs" Line="10" Column="21" />
-      <File FileName="SNAPI.Net/SNAPIClient/SNAPIClient.cs" Line="93" Column="1" />
-      <File FileName="SNAPI.Net/SNAPIClient/SNAPIFileResponse.cs" Line="2" Column="1" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIResponse.cs" Line="23" Column="1" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIClient.cs" Line="81" Column="34" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIResponseMetaData.cs" Line="8" Column="48" />
+      <File FileName="SNAPI.Net/SNAPIServer/SNAPIServer.cs" Line="33" Column="2" />
+      <File FileName="SNAPI.Net/SNAPIProxy/SNAPIProxy.cs" Line="7" Column="4" />
+      <File FileName="SNAPI.Net/SNAPIServer/SNAPIRequest.cs" Line="11" Column="1" />
+      <File FileName="SNAPI.Net/SNAPIClient/SNAPIFileResponse.cs" Line="10" Column="33" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -16,6 +15,8 @@
           <Node name="SNAPI.Net" expanded="True">
             <Node name="SNAPI.Net" expanded="True">
               <Node name="SNAPIClient" expanded="True" />
+              <Node name="SNAPIProxy" expanded="True" />
+              <Node name="SNAPIServer" expanded="True" />
             </Node>
           </Node>
         </State>
@@ -25,6 +26,9 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MultiItemStartupConfigurations />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints />
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.SNAPI.Net FirstBuild="True" />
 </Properties>

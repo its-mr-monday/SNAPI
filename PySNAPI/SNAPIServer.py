@@ -71,7 +71,7 @@ class SNAPIServer:
 
     def serve(self, host="0.0.0.0", port=5001):
         try:
-            print("Starting SNAPI (Secure Network Application Interface) Server on port: " + str(port))
+            print("Starting PySNAPI (Secure Network Application Interface) Server on port: " + str(port))
             self.running = True
             #Setup the thread cleanup thread
             self.cleanupThread = threading.Thread(target=self.cleanupThreads, daemon=True)
@@ -165,8 +165,7 @@ class SNAPIServer:
 
     def add_route(self, route: str, handler):
         if route in self.route_map:
-            print(f"Route {route} already exists")
-            return
+            raise IOError(f"Route {route} already exists")
         self.route_map[route] = handler
 
     def add_download(self, route: str, srcDir: str, authMethod=None):
@@ -224,12 +223,12 @@ class SNAPIServer:
         fhash = hashlib.sha256(filebytes).hexdigest()
         
         return 200, { "data": b64FileString, "filename": filename, "filesize": fsize, "sha256": fhash }
-        
+
     def log_request(self, route, response_code, ipaddr, time, req_type):
         print(f"[{time}] {ipaddr[0]} {response_code} {req_type} {route}")
 
     def log_error(self, errorMessage):
-        print(f"[{datetime.datetime.now()}] {errorMessage}")
+        print(f"[{datetime.datetime.now()}] Error: {errorMessage}")
 
     def cleanupThreads(self):
         while self.running == True:
