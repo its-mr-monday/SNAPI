@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SNAPI.Net.SNAPIClient
+namespace SNAPI.Net.Client
 {
 	public class SNAPIResponseMetaData
 	{

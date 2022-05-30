@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace SNAPI.Net.SNAPIClient;
+namespace SNAPI.Net.Client;
 
 public class SNAPIClient
 {

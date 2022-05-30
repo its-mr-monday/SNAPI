@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 
-namespace SNAPI.Net.SNAPIClient
+namespace SNAPI.Net.Client
 {
 	public class SNAPIResponse
 	{

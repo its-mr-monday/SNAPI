@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SNAPI.Net.SNAPIServer
+namespace SNAPI.Net.Server
 {
 	public class SNAPIDownloadResponse
 	{

@@ -1,10 +1,13 @@
 ﻿using System;
-namespace SNAPI.Net.SNAPIProxy
+using SNAPI.Net.Client;
+
+namespace SNAPI.Net.Proxy
 {
 	public class SNAPIProxy
 	{
 		public SNAPIProxy()
 		{
+
 		}
 	}
 }

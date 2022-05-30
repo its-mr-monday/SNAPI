@@ -20,7 +20,7 @@ namespace SNAPI.Net.Server
 		private TcpListener? tcpListener = null;
 		private bool running = false;
 		private List<Thread> active_threads;
-		private Thread? threadManager = null;
+		private Thread? cleanupThread = null;
 		private Dictionary<string, Func<SNAPIRequest, SNAPIResponse>> route_map;
 
 		public SNAPIServer(string certificateFile, int max_threads=50)
@@ -36,19 +36,29 @@ namespace SNAPI.Net.Server
         {
 			Console.WriteLine($"Starting SNAPI.Net (Secure Network Application Interface) Server on port: {port}");
 			this.running = true;
-			this.port = port;
+			try
+			{
+				this.port = port;
+				this.cleanupThread = new Thread(() => this.cleanupThreads());
+				this.cleanupThread.Start();
+				if (this.tcpListener != null)
+				{
+					throw new SNAPIServerException("Error tcpListener object already created!");
+				}
 
-			if (this.tcpListener != null)
+
+				this.tcpListener = SetupListener(host, this.port);
+				this.tcpListener.Start();
+				while (true)
+				{
+					TcpClient newClient = this.tcpListener.AcceptTcpClient();
+					ProcessClient(newClient);
+				}
+			} catch (Exception e)
             {
-				throw new SNAPIServerException("Error tcpListener object already created!");
-            }
-
-
-			this.tcpListener = SetupListener(host, this.port);
-			this.tcpListener.Start();
-			while (true) {
-				TcpClient newClient = this.tcpListener.AcceptTcpClient();
-				ProcessClient(newClient);
+				Console.WriteLine(e);
+				Console.WriteLine("\nSNAPI Server shutting down!");
+				this.suspendThreads();
             }
 
         }
@@ -78,7 +88,7 @@ namespace SNAPI.Net.Server
 
             } catch (AuthenticationException e)
             {
-
+				Console.WriteLine(e);
 				sslStream.Close();
 				client.Close();
             }
@@ -110,7 +120,7 @@ namespace SNAPI.Net.Server
 			SNAPIRequest request = DecodePacket(Encoding.UTF8.GetString(request_packt));
 			SNAPIResponse response = new SNAPIResponse(400, encodedJsonPayload: "{\"message\": \"Bad Request\"}");
 			if (!(request.GetRequestMetaDataObject() == null)
-				|| !(request.GetRequestMetaDataObject().Route == "") || ! (request.GetRequestMetaDataObject().Request_type == "")
+				|| !(request.GetRequestMetaDataObject().Route == "") || ! (request.GetRequestMetaDataObject().Request_type == ""))
             {
 				string route = request.GetRequestMetaDataObject().Route;
 				if (this.route_map.ContainsKey(route))
@@ -158,10 +168,17 @@ namespace SNAPI.Net.Server
 
 		public void AddDownload(string route, string srcDir, Func<string, bool>? authMethod = null)
         {
-			
+			if (route_map.ContainsKey(route))
+            {
+				throw new SNAPIServerException($"Error route {route} already exists");
+			}
+			this.route_map.Add(route, req =>
+			{
+				return DownloadHandler(srcDir, req, authMethod: authMethod);
+			});
         }
 
-		private SNAPIResponse DownloadHandler(string srdDir, SNAPIRequest request, Func<string, bool>? authMethod = null)
+		private SNAPIResponse DownloadHandler(string srcDir, SNAPIRequest request, Func<string, bool>? authMethod = null)
         {
 			SNAPIRequestMetaData? metaData = request.GetRequestMetaDataObject();
 			if (metaData == null || metaData.Request_type != "DWONLOAD")
@@ -177,6 +194,50 @@ namespace SNAPI.Net.Server
 				return new SNAPIResponse(400, encodedJsonPayload: "{ \"message\": \"Bad Request\" }");
 			}
 
+			if (authMethod != null)
+            {
+				if (metaData.Auth == "" || !authMethod(metaData.Auth))
+                {
+					return new SNAPIResponse(401, encodedJsonPayload: "{\"message\":\"Unauthorized\"}");
+                }
+            }
+
+			string filename = download_request.Filename;
+
+			if (filename == "")
+            {
+				return new SNAPIResponse(400, encodedJsonPayload: "{ \"message\": \"Bad Request\" }");
+			}
+
+			string filePath = Path.Combine(srcDir, filename);
+
+			//Prevent file system traversal
+			string? srcpathdir = Path.GetDirectoryName(filePath);
+			if (srcpathdir == null || srcpathdir != srcDir)
+            {
+				return new SNAPIResponse(400, encodedJsonPayload: "{ \"message\": \"Bad Request\" }");
+			}
+
+			if (!File.Exists(filePath))
+            {
+				return new SNAPIResponse(404, encodedJsonPayload: "{\"message\":\"File Not Found\"}");
+            }
+
+			byte[] filebytes = File.ReadAllBytes(filePath);
+			string filehash = ComputeSha256Hash(filebytes);
+			string b64bytes = Convert.ToBase64String(filebytes);
+			int size = b64bytes.Length;
+
+			SNAPIDownloadResponse downloadResponse = new SNAPIDownloadResponse
+			{
+				Sha256 = filehash,
+				Filesize = size,
+				Data = b64bytes,
+				Filename = filename
+			};
+
+			string json_payload_response = JsonSerializer.Serialize<SNAPIDownloadResponse>(downloadResponse);
+			return new SNAPIResponse(200, encodedJsonPayload: json_payload_response);
 		}
 
 		private static byte[] EncodePacket(string json_payload, int meta_inf)
@@ -224,6 +285,28 @@ namespace SNAPI.Net.Server
 		private void LogError(string time, string errorMessage)
         {
 			Console.WriteLine($"[{time}] Error: {errorMessage}");
+        }
+
+		private void cleanupThreads()
+        {
+			while (this.running)
+            {
+				foreach (Thread thread in this.active_threads) {
+					if (thread.IsAlive) continue;
+					this.active_threads.Remove(thread);
+                }
+				Thread.Sleep(1000);		//Sleep every second
+            }
+        }
+
+		private void suspendThreads()
+        {
+			this.running = false;
+			foreach (Thread thread in this.active_threads)
+            {
+				if (thread.IsAlive) thread.Join();
+            }
+			this.cleanupThread.Join();
         }
 	}
 }

@@ -7,16 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="SNAPIClient\" />
-    <None Remove="SNAPIProxy\" />
-    <None Remove="SmapleServer\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="SNAPIClient\" />
-    <Folder Include="SNAPIProxy\" />
-    <Folder Include="SmapleServer\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\.editorconfig" />
   </ItemGroup>
 </Project>
