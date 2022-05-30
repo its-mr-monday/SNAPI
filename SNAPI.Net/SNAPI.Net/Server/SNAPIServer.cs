@@ -104,7 +104,7 @@ namespace SNAPI.Net.Server
                 {
 					byte[] buffer = new byte[1024];
 					int bytesRead = sslStream.Read(buffer);
-					if (bytesRead > 1)
+					if (bytesRead < 1)
                     {
 						break;
                     }
