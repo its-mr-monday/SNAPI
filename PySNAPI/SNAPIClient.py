@@ -147,6 +147,19 @@ class SNAPIClient:
                 raise IOError("Could not write file to dest: " + dest)
         return response
 
+    def upload(self, route, filename: str, filebytes: bytes, auth=""):
+        meta = { "route": route, "request_type": "UPLOAD" }
+        if self.proxy_config != None:
+            if self.proxy_config.auth() != None:
+                meta["proxy_auth"] = self.proxy_config.auth()
+            meta["server"] = self.host
+            meta["server_port"] = self.port
+        if auth != "":
+            meta["auth"] = auth
+        payload = { "filename": filename, "data": base64.b64encode(filebytes).decode("utf-8"), "filesize": len(base64.b64encode(filebytes).decode("utf-8")), "sha256": hashlib.sha256(filebytes).hexdigest() }
+        packet = encode_packet(payload, meta)
+        return self.send_packet(packet)
+
     #Returns a response object
     def send_packet(self, packet: bytes):
         context = ssl.create_default_context()
@@ -160,7 +173,6 @@ class SNAPIClient:
             hostport = self.proxy_config.port()
         with socket.create_connection((hostaddr, hostport)) as sock:
             with context.wrap_socket(sock, server_hostname=hostaddr) as sslSocket:
-                print(packet.decode("utf-8"))
                 sslSocket.sendall(packet)
                 data = None
                 while True:
@@ -176,7 +188,6 @@ class SNAPIClient:
                         print(e)
                         break
                 if data != None:
-                    print(data.decode('utf-8'))
                     meta_inf, payload = decode_packet(data.decode("utf-8"))
                     if meta_inf is not None or payload is not None:
                         return SNAPIResponse(payload, meta_inf)

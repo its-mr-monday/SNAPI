@@ -1,4 +1,4 @@
-from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, SNAPIProxyConfig, socket, ssl, json
+from PySNAPI.SNAPIClient import SNAPIClient, SNAPIResponse, SNAPIProxyConfig, socket, ssl, json, base64
 from PySNAPI.SNAPIServer import encode_packet, decode_packet, threading, time, datetime
 from ssl import SSLEOFError, SSLSocket
 
@@ -118,6 +118,17 @@ class SNAPIProxy:
                     response = SNAPIResponse({"message": "No filename specified"}, meta)
                 else:
                     response = client.download(meta_inf["route"], payload["filename"], auth=auth)
+            if request_type == "UPLOAD":
+                if "filename" not in payload:
+                    meta = { "response_code": 400}
+                    response = SNAPIResponse({"message": "No filename specified"}, meta)
+                else:
+                    if "data" not in payload:
+                        meta = { "response_code": 400}
+                        response = SNAPIResponse({"message": "No data specified"}, meta)
+                    else:
+                        response = client.upload(meta_inf["route"], payload["filename"], base64.b64decode(payload["data"]), auth=auth)
+                    
 
             response_code = 400
             response_payload = None

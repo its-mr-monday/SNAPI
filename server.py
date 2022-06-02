@@ -8,7 +8,10 @@ def main():
     snapi.add_route("/auth_check", auth_check)
     snapi.add_download("/download", "/Users/zack/Projects/SecureSocket/PySecureSocket/uploads", 
         authMethod=authVerify)
+
+    snapi.add_upload("/upload", "/Users/zack/Projects/SecureSocket/PySecureSocket/uploads", extensions=".txt", authMethod=authVerify)
     snapi.serve(port=5001)
+    
 
 if __name__ == "__main__":
     main()

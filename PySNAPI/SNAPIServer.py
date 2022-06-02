@@ -185,6 +185,76 @@ class SNAPIServer:
         
         self.route_map[route] = lambda request: self.download_handler(srcDir, request, authMethod=authMethod)
 
+    def add_upload(self, route: str, destDir: str, extensions="*", fileValidationBytesValidator=None, authMethod=None):
+        #Check if the route is already in the route map
+        if route in self.route_map:
+            print(f"Route {route} already exists")
+            return
+        
+        #Check if destDir exists
+        if not os.path.exists(destDir):
+            print(f"{destDir} does not exist")
+            return
+        
+        self.route_map[route] = lambda request: self.upload_handler(destDir, request,fileValidation=fileValidationBytesValidator, extensions=extensions, authMethod=authMethod)
+
+    def upload_handler(self, srcDir: str, request: SNAPIRequest, extensions="*", fileValidation=None, authMethod=None):
+        request_type = request.request_type()
+        if request_type != "UPLOAD":
+            return 400, { "message": "Bad Request" }
+        if authMethod != None:
+            auth_result = authMethod(request.meta_inf()["auth"])
+            if not auth_result:
+                return 401, { "message": "Unauthorized" }
+            if not auth_result:
+                return 401, { "message": "Unauthorized" }
+        #Check if the file is in the request
+        if "data" not in request.payload() or "filename" not in request.payload():
+            return 400, { "message": "Bad Request" }
+        
+        if "sha256" not in request.payload():
+            return 400, { "message": "Bad Request" }
+
+        b64file = request.payload()["data"]
+        filebytes = base64.b64decode(b64file)
+        filename = request.payload()["filename"]
+        filehash = request.payload()["sha256"]
+        bytehash = hashlib.sha256(filebytes).hexdigest()
+
+        if filehash != bytehash:
+            return 400, { "message": "Bad Request" }
+
+        if extensions != "*":
+            if extensions is list:
+                for x in range(0, len(extensions)):
+                    if filename.lower().endswith(extensions[x]):
+                        break
+                    if x == len(extensions) - 1:
+                        return 400, { "message": "Bad Request" }
+            else:
+                if not filename.lower().endswith(extensions):
+                    return 400, { "message": "Bad Request" }
+        
+        #If they added a method to validate the filebytes
+        if fileValidation != None:
+            if fileValidation(filebytes) != True:
+                return 400, { "message": "Bad Request" }
+        
+        #Check for file traversal
+        filepath = os.path.join(srcDir, filename)
+        filepathdir = os.path.dirname(filepath)
+        if filepathdir != srcDir:
+            return 400, { "message": "Bad Request" }
+
+        #Check if the file already exists
+        if os.path.exists(filepath):
+            return 409, { "message": "File already exists" }
+
+        #Write the file
+        with open(filepath, "wb") as f:
+            f.write(filebytes)
+        return 200, { "message": "File Uploaded" }
+
     def download_handler(self, srcDir: str, request: SNAPIRequest, authMethod=None):
         request_type = request.request_type()
         current_dir = srcDir

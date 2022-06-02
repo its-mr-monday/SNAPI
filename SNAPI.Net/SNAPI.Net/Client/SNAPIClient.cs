@@ -85,6 +85,32 @@ public class SNAPIClient
         return response;
     }
 
+    public SNAPIResponse? Upload(string route, string filename, byte[] filebytes, string auth = "")
+    {
+        if (filename.Length < 1)
+        {
+            throw new IOException("Error invalid filename provided to SNAPIClient.Upload()!");
+        }
+        if (filebytes.Length < 1)
+        {
+            throw new IOException("Error invalid filebytes provided to SNAPIClient.Upload()!");
+        }
+
+        string meta = EncodeMetaHeader(route, "UPLOAD", auth);
+        string filedata = Convert.ToBase64String(filebytes);
+
+        SNAPIFilePayload payload = new SNAPIFilePayload {
+            Filename = filename,
+            Data = filedata,
+            Sha256 = ComputeSha256Hash(filebytes),
+            Filesize = filedata.Length
+        };
+
+        string json = JsonSerializer.Serialize(payload);
+        byte[] packet = EncodePacket(json, meta);
+        return this.SendPacket(packet);
+    }
+
     public void RemoveProxy()
     {
         this.proxy_config = null;
@@ -157,6 +183,7 @@ public class SNAPIClient
                 client.Close();
                 byte[] response_bytes = response.ToArray();
                 string response_str = Encoding.UTF8.GetString(response_bytes);
+                Console.WriteLine(response_str);
                 return DecodePacket(response_str);
             }
         } catch (Exception e) {
@@ -185,7 +212,10 @@ public class SNAPIClient
                 client.Close();
                 byte[] response_bytes = response.ToArray();
                 string response_str = Encoding.UTF8.GetString(response_bytes);
-                SNAPIFileResponse? fileResponse = JsonSerializer.Deserialize<SNAPIFileResponse>(response_str);
+                Console.WriteLine(response_str);
+                string json_payload = FindBetween(response_str, "<payload>", "</payload>");
+                
+                SNAPIFileResponse? fileResponse = JsonSerializer.Deserialize<SNAPIFileResponse>(json_payload);
                 return fileResponse;
             }
         } catch (Exception e) {

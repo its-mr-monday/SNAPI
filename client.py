@@ -1,4 +1,4 @@
-from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, SNAPIProxyConfig, get_file, write_file
+from PySNAPI.SNAPIClient import SNAPIResponse, SNAPIClient, SNAPIProxyConfig, get_file, write_file, base64
 
 def main():
     proxyConf = SNAPIProxyConfig("127.0.0.1", 5002, proxy_username_and_password={"username": "test", "password": "test"})
@@ -30,6 +30,15 @@ def main():
         filename, filebytes = get_file(response3)
         print("Downloaded file: "  + filename)
         print("Success!")
+
+    filedata = response3.payload()
+    filename = filedata["filename"]
+    filebytes = get_file(response3)[1]
+    #ilebytes = base64.b64decode(filebytes)
+    filehash = filedata["sha256"]
+
+    response4 = apiClient.upload("/upload", "test2.txt", filebytes, auth="TEST_TOKEN_FF70")
+
     
 if __name__ == "__main__":
     main()
