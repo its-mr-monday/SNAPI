@@ -1,21 +1,35 @@
 ﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.Workbench ActiveDocument="SNAPI.Net/Server/SNAPIServer.cs">
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workbench ActiveDocument="SNAPI.Net/Client/SNAPIClient.cs">
     <Files>
       <File FileName="SNAPI.Net/Server/SNAPIRequestMetaData.cs" Line="4" Column="21" />
       <File FileName="SNAPI.Net/Proxy/SNAPIProxy.cs" Line="10" Column="1" />
       <File FileName="SNAPI.Net/Server/SNAPIDownloadRequest.cs" Line="1" Column="1" />
-      <File FileName="SNAPI.Net/Server/SNAPIServer.cs" Line="60" Column="28" />
-      <File FileName="SNAPI.Net/Client/SNAPIClient.cs" Line="85" Column="25" />
+      <File FileName="SNAPI.Net/Server/SNAPIServer.cs" Line="48" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIClient.cs" Line="108" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIFileResponse.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIProxyConfig.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIResponseMetaData.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Server/SNAPIDownloadResponse.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Server/SNAPIRequest.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Server/SNAPIResponse.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIResponse.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/SNAPIException/SNAPIException.cs" Line="1" Column="1" />
+      <File FileName="SNAPI.Net/Client/SNAPIFilePayload.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="SNAPI.Net" expanded="True">
             <Node name="SNAPI.Net" expanded="True">
-              <Node name="Client" expanded="True" />
+              <Node name="Client" expanded="True">
+                <Node name="SNAPIProxyConfig.cs" selected="True" />
+              </Node>
               <Node name="Proxy" expanded="True" />
               <Node name="Server" expanded="True" />
+              <Node name="SNAPIException" expanded="True" />
             </Node>
           </Node>
         </State>
@@ -28,6 +42,4 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
-  <MultiItemStartupConfigurations />
 </Properties>
